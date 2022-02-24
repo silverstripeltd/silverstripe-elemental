@@ -3,6 +3,7 @@
 namespace DNADesign\Elemental\Controllers;
 
 use DNADesign\Elemental\Forms\EditFormFactory;
+use DNADesign\Elemental\Forms\MoveElementHandler;
 use DNADesign\Elemental\Models\BaseElement;
 use DNADesign\Elemental\Services\ElementTypeRegistry;
 use Exception;
@@ -38,6 +39,7 @@ class ElementalAreaController extends CMSMain
         'schema',
         'apiSaveForm',
         'formAction',
+        'moveElementForm',
     ];
 
     public function getClientConfig()
@@ -45,6 +47,7 @@ class ElementalAreaController extends CMSMain
         $clientConfig = parent::getClientConfig();
         $clientConfig['form']['elementForm'] = [
             'schemaUrl' => $this->Link('schema/elementForm'),
+            'moveModalSchemaUrl' => $this->Link('schema/moveElementForm'),
             'saveUrl' => $this->Link('api/saveForm'),
             'saveMethod' => 'post',
             'payloadFormat' => 'json',
@@ -185,13 +188,37 @@ class ElementalAreaController extends CMSMain
     {
         $formName = $request->param('FormName');
 
-        // Get the element ID from the form name
-        $id = substr($formName, strlen(sprintf(self::FORM_NAME_TEMPLATE, '')));
-        $form = $this->getElementForm($id);
+        if (substr($formName, 0, 15) === 'MoveElementForm') {
+            // Get the element ID from the form name
+            $id = substr($formName, strlen(sprintf('MoveElementForm_%s', '')));
+            $form = $this->getMoveElementForm($id);
+        } else {
+            // Get the element ID from the form name
+            $id = substr($formName, strlen(sprintf(self::FORM_NAME_TEMPLATE, '')));
+            $form = $this->getElementForm($id);
+        }
 
         $field = $form->getRequestHandler()->handleField($request);
 
         return $field->handleRequest($request);
+    }
+
+    public function moveElementForm(HTTPRequest $request)
+    {
+        $elementID = $request->param('ElementID');
+        return $this->getMoveElementForm($elementID);
+    }
+
+    public function getMoveElementForm($elementID)
+    {
+        $handler = MoveElementHandler::create($this);
+        $form = $handler->Form($elementID);
+        return $form;
+    }
+
+    public function moveelement($data, $form)
+    {
+        var_dump($data);
     }
 
     /**
