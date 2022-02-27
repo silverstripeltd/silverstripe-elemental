@@ -2,6 +2,7 @@
 
 namespace DNADesign\Elemental\Forms;
 
+use DNADesign\Elemental\Extensions\ElementalPageExtension;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Forms\FieldList;
@@ -9,6 +10,8 @@ use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\TreeDropdownField;
+use SilverStripe\ORM\ValidationException;
+use SilverStripe\ORM\ValidationResult;
 
 class MoveElementHandler
 {
@@ -45,12 +48,8 @@ class MoveElementHandler
                 ->addExtraClass('btn btn-primary')
         ]);
 
-        $pageField->setSearchFunction(function ($sourceObject, $labelField, $search) {
-            return DataObject::get($sourceObject)
-                ->filterAny([
-                    'MenuTitle:PartialMatch' => $search,
-                    'Title:PartialMatch' => $search,
-                ]);
+        $pageField->setDisableFunction(function ($page) {
+            return !$page->hasExtension(ElementalPageExtension::class);
         });
 
         $form = Form::create(
@@ -65,5 +64,74 @@ class MoveElementHandler
         $form->addExtraClass('form--no-dividers');
 
         return $form;
+    }
+
+    public function moveElement($element, $formData)
+    {
+        $page = SiteTree::get()->byId($formData['PageID']);
+
+        // if ElementalAreaNotFound
+        if (!$page->ElementalArea()->exists()) {
+            throw $this->validationResult(_t(
+                __CLASS__ . '.ElementalAreaNotFound',
+                'Could not find an elemental area on <strong>{PageName}</strong> to move <strong>{BlockName}</strong> to',
+                [
+                    'PageName' => $page->Title,
+                    'BlockName' => $element->Title
+                ]
+            ));
+        }
+
+        if (!$page->canEdit() || !$element->canEdit()) {
+            throw $this->validationResult(_t(
+                __CLASS__ . '.InsufficientPermissions',
+                'Can not move <strong>{PageName}</strong> to <strong>{BlockName}</strong> due to insufficient permissions',
+                [
+                    'PageName' => $page->Title,
+                    'BlockName' => $element->Title
+                ]
+            ));
+        }
+
+        // TODO: Error handling
+        // TODO: pages with multiple element areas
+        // TODO: How does this work with sort?
+        $page->ElementalArea()->Elements()->add($element->ID);
+
+        $request = $this->controller->getRequest();
+        $message = _t(
+            __CLASS__ . '.Success',
+            'Successfully moved <a href="{BlockEditLink}">{BlockName}</a> to <a href="{PageEditLink}">{PageName}</a>.',
+            [
+                'BlockName' => $element->Title,
+                'BlockEditLink' => $element->CMSEditLink(true),
+                'PageName' => $page->Title,
+                'PageEditLink' => $page->CMSEditLink(),
+            ]
+        );
+        if ($request->getHeader('X-Formschema-Request')) {
+            return $message;
+        } elseif (Director::is_ajax()) {
+            $response = new HTTPResponse($message, 200);
+
+            $response->addHeader('Content-Type', 'text/html; charset=utf-8');
+            return $response;
+        } else {
+            return $this->controller->redirectBack();
+        }
+    }
+
+    /**
+     * Raise validation error
+     *
+     * @param string $message
+     * @param string $field
+     * @return ValidationException
+     */
+    protected function validationResult($message, $field = null)
+    {
+        $error = ValidationResult::create()
+            ->addFieldError($field, $message);
+        return new ValidationException($error);
     }
 }

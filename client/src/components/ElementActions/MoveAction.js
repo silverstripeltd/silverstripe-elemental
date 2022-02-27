@@ -21,6 +21,7 @@ const MoveAction = (MenuComponent) => (props) => {
   };
 
   const closeModal = () => {
+    // TODO: refetch the elemental list when the modal is closed
     setModalOpen(false);
   };
 

@@ -9,12 +9,14 @@ use DNADesign\Elemental\Services\ElementTypeRegistry;
 use Exception;
 use Psr\Log\LoggerInterface;
 use SilverStripe\CMS\Controllers\CMSMain;
+use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\HTTPResponse_Exception;
 use SilverStripe\Core\Convert;
 use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\Form;
+use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\SecurityToken;
 
 /**
@@ -213,12 +215,30 @@ class ElementalAreaController extends CMSMain
     {
         $handler = MoveElementHandler::create($this);
         $form = $handler->Form($elementID);
+
+        $form->setValidationResponseCallback(function (ValidationResult $errors) use ($form, $elementID) {
+            $schemaId = Controller::join_links($this->Link('schema/moveElementForm'), $elementID);
+            return $this->getSchemaResponse($schemaId, $form, $errors);
+        });
+
         return $form;
     }
 
     public function moveelement($data, $form)
     {
-        var_dump($data);
+        $id = $data['ElementID'];
+        $record = BaseElement::get()->byID($id);
+        $handler = MoveElementHandler::create($this);
+        $results = $handler->moveElement($record, $data);
+
+        if (!isset($results)) {
+            return null;
+        }
+
+        // Send extra "message" data with schema response
+        $extraData = ['message' => $results];
+        $schemaId = Controller::join_links($this->Link('schema/moveElementForm'), $id);
+        return $this->getSchemaResponse($schemaId, $form, null, $extraData);
     }
 
     /**
