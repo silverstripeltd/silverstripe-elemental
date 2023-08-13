@@ -561,7 +561,8 @@ var MoveAction = function MoveAction(MenuComponent) {
         modalOpen = _useState2[0],
         setModalOpen = _useState2[1];
 
-    var id = props.element.id;
+    var id = props.element.id,
+        handleMoveBlock = props.actions.handleMoveBlock;
 
 
     var handleClick = function handleClick(event) {
@@ -571,6 +572,13 @@ var MoveAction = function MoveAction(MenuComponent) {
     };
 
     var closeModal = function closeModal() {
+      if (handleMoveBlock) {
+        handleMoveBlock(id).then(function () {
+          var preview = window.jQuery('.cms-preview');
+          preview.entwine('ss.preview')._loadUrl(preview.find('iframe').attr('src'));
+        });
+      }
+
       setModalOpen(false);
     };
 
@@ -4096,12 +4104,10 @@ var config = {
     var mutate = _ref.mutate,
         actions = _ref.ownProps.actions;
 
-    var handleMoveBlock = function handleMoveBlock(blockId, fromPageId, toPageId) {
+    var handleMoveBlock = function handleMoveBlock(blockId) {
       return mutate({
         variables: {
-          blockId: blockId,
-          fromPageId: fromPageId,
-          toPageId: toPageId
+          blockId: blockId
         }
       });
     };
