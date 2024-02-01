@@ -6,6 +6,7 @@ import AbstractAction from 'components/ElementActions/AbstractAction';
 import moveBlockMutation from 'state/editor/moveBlockMutation';
 import { getConfig } from 'state/editor/elementConfig';
 import i18n from 'i18n';
+import { joinUrlPaths } from 'lib/urls';
 
 /**
  * Adds the elemental menu action to move a block of any state
@@ -47,7 +48,7 @@ const MoveAction = (MenuComponent) => (props) => {
     toggle: props.toggle,
   };
 
-  const modalSchemaUrl = `${getConfig().form.elementForm.moveModalSchemaUrl}/${id}`;
+  const modalSchemaUrl = joinUrlPaths(`${getConfig().form.elementForm.moveModalSchemaUrl}`, id);
 
   // Todo: Render modal once per area rather than once per block
   return (
