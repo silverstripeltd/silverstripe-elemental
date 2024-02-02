@@ -85,8 +85,8 @@ class MoveElementHandler
         if (!$page->ElementalArea()->exists()) {
             throw $this->validationResult(_t(
                 __CLASS__ . '.ElementalAreaNotFound',
-                'Could not find an elemental area on <strong>{PageName}</strong> to move ' .
-                '<strong>{BlockName}</strong> to',
+                'Could not find an elemental area on "{PageName}" to move ' .
+                '"{BlockName}" to',
                 [
                     'PageName' => $page->Title,
                     'BlockName' => $element->Title
@@ -97,7 +97,7 @@ class MoveElementHandler
         if (!$page->canEdit() || !$element->canEdit()) {
             throw $this->validationResult(_t(
                 __CLASS__ . '.InsufficientPermissions',
-                'Can not move <strong>{PageName}</strong> to <strong>{BlockName}</strong> due to ' .
+                'Can not move "{PageName}" to "{BlockName}" due to ' .
                 'insufficient permissions',
                 [
                     'PageName' => $page->Title,
