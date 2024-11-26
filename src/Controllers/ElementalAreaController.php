@@ -5,6 +5,7 @@ namespace DNADesign\Elemental\Controllers;
 use DNADesign\Elemental\Forms\EditFormFactory;
 use DNADesign\Elemental\Models\BaseElement;
 use DNADesign\Elemental\Services\ElementTypeRegistry;
+use SilverStripe\Admin\AdminRootController;
 use SilverStripe\CMS\Controllers\CMSMain;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
@@ -240,7 +241,7 @@ class ElementalAreaController extends CMSMain
         );
 
         $urlSegment = $this->config()->get('url_segment');
-        $form->setFormAction("admin/$urlSegment/elementForm/$id");
+        $form->setFormAction(AdminRootController::admin_url("$urlSegment/elementForm/$id"));
 
         if (!$element->canEdit()) {
             $form->makeReadonly();
