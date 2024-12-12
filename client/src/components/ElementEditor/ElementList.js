@@ -30,6 +30,10 @@ class ElementList extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    // Scenario: save/publish buttons clicked before the elemental area is rendered
+    if (!this.props.blocks && !prevProps.blocks) {
+      return;
+    }
     // Scenario: blocks props just changed after a graphql query response updated it
     if (this.props.blocks !== prevProps.blocks) {
       this.resetState(prevState, false);
